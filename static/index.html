@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Hybrid Test Execution</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>Hybrid Test Execution</h1>
+    <p class="subtitle">Capture &rarr; Run &rarr; Fallback &rarr; Promote</p>
+  </header>
+
+  <main>
+    <section id="new-test-section" class="card">
+      <h2>1. Capture a test from intent</h2>
+      <p class="hint">
+        Describe what to verify in plain English. The agent will explore the
+        live target app and record the concrete steps it took.
+      </p>
+      <textarea id="intent-input" rows="3"
+        placeholder="e.g. Log in as a returning customer and verify the order history page shows a past order"></textarea>
+      <button id="capture-btn">Generate test</button>
+      <div id="capture-status" class="status"></div>
+    </section>
+
+    <section id="tests-section" class="card">
+      <h2>2. Tests</h2>
+      <div id="tests-list">Loading&hellip;</div>
+    </section>
+
+    <section id="run-trace-section" class="card hidden">
+      <h2>3. Run trace</h2>
+      <div id="run-summary"></div>
+      <div id="run-steps"></div>
+    </section>
+
+    <section id="promotions-section" class="card">
+      <h2>4. Pending promotions</h2>
+      <p class="hint">
+        When the agent recovers a step, review its fix here. Approving
+        rewrites the test so the next run is deterministic again.
+      </p>
+      <div id="promotions-list">Loading&hellip;</div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
