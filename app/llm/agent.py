@@ -25,11 +25,17 @@ web browser one action at a time. You are given:
 Decide the SINGLE next action that moves toward the goal. Do not plan multiple \
 steps ahead - one decision at a time, based only on what's visible now.
 
-Rules for the `selector` field:
-- The snapshot does not expose CSS ids or classes, only roles and accessible names.
-- Prefer `text=<exact visible text>` matching text you can see in the snapshot \
-(e.g. `text=Login`), or `role=<role>[name="<accessible name>"]` when a role is clearer.
-- Never invent a selector for something not present in the snapshot.
+Rules for the `selector` field - the selector MUST be in one of these exact forms,
+including the prefix. This is not optional:
+- `text=<exact visible text>` - e.g. `text=Login`
+- `role=<role>[name="<accessible name>"]` - e.g. `role=link[name="Laptops"]`, \
+`role=button[name="Add to cart"]`
+
+WRONG (missing prefix, will fail): `link[name="Laptops"]`, `Add to cart`, `"Login"`
+RIGHT: `role=link[name="Laptops"]`, `text=Add to cart`, `text=Login`
+
+The snapshot does not expose CSS ids or classes, only roles and accessible names -
+never invent a selector for something not present in the snapshot.
 
 Action types:
 - goto: navigate to a URL (value = the URL)

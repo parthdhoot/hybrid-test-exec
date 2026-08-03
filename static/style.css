@@ -88,6 +88,19 @@ button.reject { background: var(--fail); }
 .test-item h3, .promo-item h3 { margin: 0 0 0.25rem; font-size: 0.95rem; }
 .muted { color: var(--muted); font-size: 0.85rem; }
 
+.promo-source {
+  margin: 0 0 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--accent);
+}
+
+.test-id { display: flex; align-items: center; gap: 0.5rem; }
+.test-id code { background: var(--bg); padding: 0.1rem 0.4rem; border-radius: 4px; }
+.copy-id-btn { margin-top: 0; padding: 0.15rem 0.5rem; font-size: 0.75rem; }
+
 .steps-table {
   width: 100%;
   border-collapse: collapse;

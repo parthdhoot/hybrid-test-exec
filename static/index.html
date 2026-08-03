@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <title>Hybrid Test Execution</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=3" />
 </head>
 <body>
   <header>
@@ -19,7 +19,7 @@
         live target app and record the concrete steps it took.
       </p>
       <textarea id="intent-input" rows="3"
-        placeholder="e.g. Log in as a returning customer and verify the order history page shows a past order"></textarea>
+        placeholder="e.g. Open the Laptops category, view a laptop product, add it to the cart, and verify it appears in the cart"></textarea>
       <button id="capture-btn">Generate test</button>
       <div id="capture-status" class="status"></div>
     </section>
@@ -45,6 +45,6 @@
     </section>
   </main>
 
-  <script src="app.js"></script>
+  <script src="app.js?v=4"></script>
 </body>
 </html>

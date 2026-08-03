@@ -1,6 +1,7 @@
+import asyncio
 from contextlib import asynccontextmanager
 
-from playwright.async_api import Page, async_playwright
+from playwright.async_api import Dialog, Page, async_playwright
 
 
 @asynccontextmanager
@@ -15,6 +16,14 @@ async def browser_page():
         browser = await p.chromium.launch(headless=True)
         context = await browser.new_context()
         page = await context.new_page()
+        # Some target apps trigger native JS dialogs (e.g. alert() on "add to
+        # cart"). Left unhandled these block headless automation indefinitely.
+        # dialog.accept() is itself async, so a plain lambda wouldn't actually
+        # await it - schedule it explicitly instead.
+        def _auto_accept_dialog(dialog: Dialog) -> None:
+            asyncio.ensure_future(dialog.accept())
+
+        page.on("dialog", _auto_accept_dialog)
         try:
             yield page
         finally:

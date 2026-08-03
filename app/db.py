@@ -244,16 +244,24 @@ def insert_promotion_candidate(
 
 
 def list_promotion_candidates(status: str | None = None) -> list[dict]:
+    # Joined with tests/run_steps so the UI can show *which* test and *which*
+    # step a candidate belongs to - without this, multiple pending candidates
+    # (e.g. several drifted steps in one suite, or drifts across several
+    # tests) are indistinguishable except by their proposed selector.
+    query = """
+        SELECT pc.*, t.name AS test_name, rs.step_index AS step_index
+        FROM promotion_candidates pc
+        JOIN tests t ON pc.test_id = t.id
+        JOIN run_steps rs ON pc.run_step_id = rs.id
+    """
     with get_conn() as conn:
         if status:
             rows = conn.execute(
-                "SELECT * FROM promotion_candidates WHERE status = ? ORDER BY created_at DESC",
+                query + " WHERE pc.status = ? ORDER BY pc.created_at DESC",
                 (status,),
             ).fetchall()
         else:
-            rows = conn.execute(
-                "SELECT * FROM promotion_candidates ORDER BY created_at DESC"
-            ).fetchall()
+            rows = conn.execute(query + " ORDER BY pc.created_at DESC").fetchall()
     return [dict(r) for r in rows]
 
 

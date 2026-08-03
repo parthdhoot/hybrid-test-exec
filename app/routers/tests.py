@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 
 from app import db
-from app.execution.capture import capture_test_from_intent
+from app.execution.capture import capture_test_from_intent, CaptureFailedError
 from app.models import CreateTestRequest
 
 router = APIRouter(prefix="/api/tests", tags=["tests"])
@@ -9,7 +9,11 @@ router = APIRouter(prefix="/api/tests", tags=["tests"])
 
 @router.post("")
 async def create_test(payload: CreateTestRequest):
-    steps = await capture_test_from_intent(payload.intent)
+    try:
+        steps = await capture_test_from_intent(payload.intent)
+    except CaptureFailedError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+    
     if len(steps) <= 1:
         raise HTTPException(
             status_code=422,

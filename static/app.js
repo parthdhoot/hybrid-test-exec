@@ -35,6 +35,19 @@ async function loadTests() {
       document
         .getElementById(`run-btn-${t.id}`)
         .addEventListener("click", () => runTest(t.id));
+      const copyBtn = document.getElementById(`copy-id-${t.id}`);
+      copyBtn.addEventListener("click", async () => {
+        const original = copyBtn.textContent;
+        try {
+          await navigator.clipboard.writeText(t.id);
+          copyBtn.textContent = "Copied!";
+        } catch (err) {
+          // Clipboard permission can be denied by the browser; the id is
+          // still visible/selectable in the UI either way.
+          copyBtn.textContent = "Copy blocked - select manually";
+        }
+        setTimeout(() => (copyBtn.textContent = original), 1600);
+      });
     });
   } catch (err) {
     el.innerHTML = `<p class="status error">Failed to load tests: ${escapeHtml(err.message)}</p>`;
@@ -58,6 +71,10 @@ function renderTestItem(test) {
     <div class="test-item">
       <h3>${escapeHtml(test.name)}</h3>
       <p class="muted">${escapeHtml(test.intent_text)}</p>
+      <p class="muted test-id">
+        id: <code>${escapeHtml(test.id)}</code>
+        <button class="copy-id-btn secondary" id="copy-id-${test.id}" type="button">Copy ID</button>
+      </p>
       <table class="steps-table">
         <thead><tr><th>#</th><th>action</th><th>selector</th><th>value</th></tr></thead>
         <tbody>${stepsRows}</tbody>
@@ -163,6 +180,7 @@ async function loadPromotions() {
 function renderPromotionItem(c) {
   return `
     <div class="promo-item">
+      <p class="promo-source">${escapeHtml(c.test_name)} &mdash; step ${c.step_index + 1}</p>
       <h3>${escapeHtml(c.proposed_action)} &rarr; ${escapeHtml(c.proposed_selector || "")}</h3>
       <p class="muted">${escapeHtml(c.reasoning)}</p>
       <button id="approve-${c.id}">Approve &amp; promote</button>

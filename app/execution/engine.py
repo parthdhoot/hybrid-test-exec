@@ -54,7 +54,10 @@ async def run_test(test_id: str) -> str:
             step_uuid = step["step_uuid"]
             failure: Exception | None = None
             try:
-                await apply_action(page, step["action"], step["selector"], step["value"])
+                await apply_action(
+                    page, step["action"], step["selector"], step["value"],
+                    expected_text=step.get("expected_outcome"),
+                )
                 db.insert_run_step(
                     run_id=run_id,
                     step_uuid=step_uuid,

@@ -6,9 +6,34 @@ same function - so "deterministic execution" and "agentic execution" differ
 only in *who chose the action*, never in how it's carried out.
 """
 
+import re
+
 from playwright.async_api import Page
 
 ACTION_TIMEOUT_MS = 5000
+
+_ENGINE_PREFIXES = ("text=", "role=", "css=", "xpath=", "#", ".")
+_BARE_ROLE_ATTR = re.compile(r'^[a-zA-Z][\w-]*\[name="[^"]*"\]$')
+
+
+def normalize_selector(selector: str | None) -> str | None:
+    """Best-effort repair for selectors missing a Playwright engine prefix.
+
+    Prompt instructions alone don't reliably get every model to include the
+    `role=`/`text=` prefix (weaker/smaller models especially tend to drop
+    it) - this is a defensive net so a plausible-but-malformed selector
+    still resolves instead of failing on a technicality.
+    """
+    if not selector:
+        return selector
+    s = selector.strip()
+    if s.startswith(_ENGINE_PREFIXES):
+        return s
+    if _BARE_ROLE_ATTR.match(s):
+        return f"role={s}"
+    if s.startswith('"') and s.endswith('"') and len(s) > 1:
+        return f"text={s[1:-1]}"
+    return s
 
 
 async def apply_action(
@@ -18,6 +43,8 @@ async def apply_action(
     value: str | None,
     expected_text: str | None = None,
 ) -> None:
+    selector = normalize_selector(selector)
+
     if action == "goto":
         if not value:
             raise ValueError("goto requires a value (url)")
@@ -48,3 +75,18 @@ async def apply_action(
 
     else:
         raise ValueError(f"unknown action type: {action!r}")
+
+    if action in ("goto", "click"):
+        # click() waits for the click itself, not for a navigation - or an
+        # async side effect like an add-to-cart request - it might trigger.
+        # Without this, the next snapshot/action can run before the page (or
+        # the target app's own backend call) has actually settled. Matches
+        # ACTION_TIMEOUT_MS rather than using a shorter window, so this wait
+        # isn't the tightest constraint in the step - see the note on why 5s
+        # specifically in the leadership document. Best-effort: don't fail
+        # the step if the page was already settled (e.g. an in-page click
+        # with no navigation).
+        try:
+            await page.wait_for_load_state("networkidle", timeout=ACTION_TIMEOUT_MS)
+        except Exception:
+            pass

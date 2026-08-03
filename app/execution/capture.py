@@ -9,13 +9,17 @@ This is why selectors in the generated test are trustworthy - they were
 never hallucinated from the model's training data, they were resolved
 against the live page.
 """
-
+import sys
 from app.config import MAX_CAPTURE_STEPS, TARGET_APP_URL
 from app.db import new_id
 from app.execution.actions import apply_action
 from app.execution.browser import browser_page, get_snapshot_text
 from app.llm.agent import decide_next_action
 
+class CaptureFailedError(RuntimeError):
+    """The exploration loop couldn't complete. Never return a partial step
+    list on failure - a test that silently stops mid-exploration is worse
+    than no test, because it looks identical to one that succeeded."""
 
 async def capture_test_from_intent(intent: str) -> list[dict]:
     steps: list[dict] = []
@@ -50,16 +54,12 @@ async def capture_test_from_intent(intent: str) -> list[dict]:
             except Exception as exc:
                 # The exploring agent itself got stuck - stop rather than
                 # record a step that didn't actually happen.
-                history.append(
-                    {
-                        "action": decision.action,
-                        "selector": decision.selector,
-                        "value": decision.value,
-                        "outcome": f"failed during capture: {exc}",
-                    }
-                )
-                break
-
+                print(f"[capture] step failed: {decision.action} {decision.selector!r} -> {exc!r}", file=sys.stderr)
+                raise CaptureFailedError(
+                    f"The agent tried to {decision.action} '{decision.selector}' while exploring "
+                    f"the app, and it failed: {exc}. Capture stopped rather than saving an "
+                    f"incomplete test."
+                ) from exc
             steps.append(
                 {
                     "step_uuid": new_id(),
